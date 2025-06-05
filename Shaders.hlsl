@@ -111,40 +111,5 @@ inline float NDFBlinnPhongNormalizedTerm(float NdotH, float fRoughnessToSpecPowe
 
 float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
 {
-	/*
-	float4 cColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-
-	float3 f3Normal = normalize(input.normalW);
-	float3 f3ToCamera = normalize(gf3CameraPosition - input.positionW);
-	float3 f3Reflection = reflect(f3ToCamera, f3Normal);
-	float3 f3Half = normalize(gf3LightDirection + f3ToCamera);
-
-	float nl = saturate(dot(f3Normal, gf3LightDirection));
-	float nh = saturate(dot(f3Normal, f3Half));
-	float nv = saturate(dot(f3Normal, f3ToCamera));
-	float lh = saturate(dot(gf3LightDirection, f3Half));
-
-	float fPerceptualRoughness = 1.0f - gfSmoothness;
-	float fDiffuseFactor = DisneyDiffuse(nv, nl, lh, fPerceptualRoughness) * nl;
-
-	float fRoughness = fPerceptualRoughness * fPerceptualRoughness;
-	float V = SmithBeckmannVisibilityTerm(nl, nv, fRoughness);
-	float D = NDFBlinnPhongNormalizedTerm(nh, PerceptualRoughnessToSpecPower(fPerceptualRoughness));
-	float fSpecularFactor = max(0.0f, V * D * 3.14159f * nl);
-	fSpecularFactor *= any(gf3SpecularColor) ? 1.0f : 0.0f;
-
-	float fSurfaceReduction = 1.0f / ((fRoughness * fRoughness) + 1.0f);
-	float fGrazingTerm = saturate(gfSmoothness + (1 - gfOneMinusReflectivity));
-
-	cColor.rgb = gf3ObjectColor * (gf3AmbientLightColor + (gf3LightColor * fDiffuseFactor));
-	cColor.rgb += fSpecularFactor * gf3LightColor * FresnelTerm(gf3SpecularColor, lh);
-	cColor.rgb += fSurfaceReduction * gf3AmbientSpecularColor * FresnelLerp(gf3SpecularColor, fGrazingTerm, nv);
-
-	float fRim = saturate(dot(f3ToCamera, f3Normal));
-	//cColor.rgb += float3(0.25f, 0.0f, 0.0f) * pow(fRim, 4.0f) + (sin(gfCurrentTime) * 0.3f);
-
-//	return(float4(f3Normal * 0.5f + 0.5f, 1.0f));
-	return(cColor);
-	*/
     return float4(gf3ObjectColor, 1.0f);
 }

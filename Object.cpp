@@ -424,3 +424,61 @@ void CTankObject::ReleaseUploadBuffers()
 	CGameObject::ReleaseUploadBuffers();
 	if (bullet) bullet->ReleaseUploadBuffers();
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
+	* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, LPCTSTR pFileName, int
+	nWidth, int nLength, int nBlockWidth, int nBlockLength, XMFLOAT3 xmf3Scale, XMFLOAT4
+	xmf4Color) : CGameObject(0)
+{
+	m_nWidth = nWidth;
+	m_nLength = nLength;
+	int cxQuadsPerBlock = nBlockWidth - 1;
+	int czQuadsPerBlock = nBlockLength - 1;
+	m_xmf3Scale = xmf3Scale;
+	m_pHeightMapImage = new CHeightMapImage(pFileName, nWidth, nLength, xmf3Scale);
+	long cxBlocks = (m_nWidth - 1) / cxQuadsPerBlock;
+	long czBlocks = (m_nLength - 1) / czQuadsPerBlock;
+	m_nMeshes = cxBlocks * czBlocks;
+	m_ppMeshes = new CMesh*[m_nMeshes];
+	for (int i = 0; i < m_nMeshes; i++)m_ppMeshes[i] = NULL;
+	CHeightMapGridMesh* pHeightMapGridMesh = NULL;
+	for (int z = 0, zStart = 0; z < czBlocks; z++)
+	{
+		for (int x = 0, xStart = 0; x < cxBlocks; x++)
+		{
+			xStart = x * (nBlockWidth - 1);
+			zStart = z * (nBlockLength - 1);
+			pHeightMapGridMesh = new CHeightMapGridMesh(pd3dDevice, pd3dCommandList, xStart,
+			zStart, nBlockWidth, nBlockLength, xmf3Scale, xmf4Color, m_pHeightMapImage);
+			SetMesh(x + (z * cxBlocks), pHeightMapGridMesh);
+		}
+	}
+	CTerrainShader *pShader = new CTerrainShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	SetShader(pShader);
+}
+CHeightMapTerrain::~CHeightMapTerrain(void)
+{
+	if (m_pHeightMapImage) delete m_pHeightMapImage;
+}
+void CHeightMapTerrain::UpdateBoundingBox(){
+	XMFLOAT3 center = XMFLOAT3(
+		(m_nWidth * 0.5f) * m_xmf3Scale.x,
+		0.0f,
+		(m_nLength * 0.5f) * m_xmf3Scale.z
+	);
+	XMFLOAT3 extent = XMFLOAT3(
+		(m_nWidth * 0.5f) * m_xmf3Scale.x,
+		256.0f, // 최대 높이 고려하여 임의 값 설정
+		(m_nLength * 0.5f) * m_xmf3Scale.z
+	);
+	m_xmOOBB = BoundingOrientedBox(center, extent, XMFLOAT4(0, 0, 0, 1));
+}
+
+void CHeightMapTerrain::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) {
+	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
+	UpdateShaderVariables(pd3dCommandList);
+	for (int i = 0; i < m_nMeshes; ++i) {
+		if (m_ppMeshes[i]) m_ppMeshes[i]->Render(pd3dCommandList);
+	}
+}

@@ -135,9 +135,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetPath)" "$(ProjectDir)Executable\" /Y
-xcopy "$(ProjectDir)Shaders\*Shaders.hlsl" "$(ProjectDir)Executable\" /Y
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

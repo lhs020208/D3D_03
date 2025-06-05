@@ -72,6 +72,12 @@ extern UINT	gnCbvSrvDescriptorIncrementSize;
 
 extern ID3D12Resource *CreateBufferResource(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, void *pData, UINT nBytes, D3D12_HEAP_TYPE d3dHeapType = D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, ID3D12Resource **ppd3dUploadBuffer = NULL);
 
+#define EPSILON 1.0e-10f
+inline bool IsZero(float fValue) { return((fabsf(fValue) < EPSILON)); }
+inline bool IsEqual(float fA, float fB) { return(::IsZero(fA - fB)); }
+inline float InverseSqrt(float fValue) { return 1.0f / sqrtf(fValue); }
+inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT = fTemp; }
+
 namespace Vector3
 {
 	inline XMFLOAT3 XMVectorToFloat3(XMVECTOR& xmvVector)
@@ -184,7 +190,12 @@ namespace Vector3
 			fabsf(v1.y - v2.y) < epsilon &&
 			fabsf(v1.z - v2.z) < epsilon);
 	}
-
+	inline bool IsZero(XMFLOAT3& xmf3Vector)
+	{
+		if (::IsZero(xmf3Vector.x) && ::IsZero(xmf3Vector.y) && ::IsZero(xmf3Vector.z))
+			return(true);
+		return(false);
+	}
 }
 
 namespace Vector4
@@ -193,6 +204,12 @@ namespace Vector4
 	{
 		XMFLOAT4 xmf4Result;
 		XMStoreFloat4(&xmf4Result, XMLoadFloat4(&xmf4Vector1) + XMLoadFloat4(&xmf4Vector2));
+		return(xmf4Result);
+	}
+	inline XMFLOAT4 Multiply(float fScalar, XMFLOAT4& xmf4Vector)
+	{
+		XMFLOAT4 xmf4Result;
+		XMStoreFloat4(&xmf4Result, fScalar * XMLoadFloat4(&xmf4Vector));
 		return(xmf4Result);
 	}
 }
