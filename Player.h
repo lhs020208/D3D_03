@@ -123,4 +123,8 @@ private:
 public:
 	const XMFLOAT3& GetMoveVector() const { return m_xmf3MoveVector; }
 	void ClearMoveVector() { m_xmf3MoveVector = { 0.0f, 0.0f, 0.0f }; }
+
+	float FallingSpeed = 0.0f;
+	float Height;
+	void Fall(float G);
 };

@@ -318,7 +318,7 @@ void CTankPlayer::Animate(float fElapsedTime)
 	XMFLOAT3 look = GetLook();
 	XMFLOAT3 right = GetRight();
 
-	float speed = fElapsedTime * 0.5f;
+	float speed = fElapsedTime * 0.5f * 10;
 
 	m_xmf3MoveVector = {
 	   right.x * move_x * speed + look.x * move_z * speed,
@@ -340,7 +340,6 @@ void CTankPlayer::Animate(float fElapsedTime)
 			SwitchBullet();
 		}
 	}
-
 	UpdateBoundingBox();
 	m_pBullet->UpdateBoundingBox();
 	m_pShild->UpdateBoundingBox();
@@ -414,4 +413,19 @@ CCamera* CTankPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 	Update(fTimeElapsed);
 
 	return(m_pCamera);
+}
+
+void CTankPlayer::Fall(float G)
+{
+	FallingSpeed += G;
+	XMFLOAT3 xmf3Position = GetPosition();
+	xmf3Position.y -= FallingSpeed;
+
+	if (xmf3Position.y <= Height)
+	{
+		xmf3Position.y = Height;
+		FallingSpeed = 0.0f;
+	}
+
+	SetPosition(xmf3Position);
 }

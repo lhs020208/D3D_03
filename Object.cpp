@@ -276,6 +276,20 @@ void CGameObject::SetRotationTransform(XMFLOAT4X4* pmxf4x4Transform)
 	m_xmf4x4World._31 = pmxf4x4Transform->_31; m_xmf4x4World._32 = pmxf4x4Transform->_32; m_xmf4x4World._33 = pmxf4x4Transform->_33;
 }
 
+void CGameObject::Fall(float G)
+{
+	FallingSpeed += G;
+	XMFLOAT3 xmf3Position = GetPosition();
+	xmf3Position.y -= FallingSpeed;
+
+	if (xmf3Position.y <= Height)
+	{
+		xmf3Position.y = Height;
+		FallingSpeed = 0.0f;
+	}
+
+	SetPosition(xmf3Position);
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CCubeObject::Animate(float fElapsedTime)
 {
@@ -287,11 +301,9 @@ void CCubeObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CExplosionObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	
 		for (int i = 0; i < EXPLOSION_DEBRISES; i++) {
-			if (m_pxmf4x4Transforms[i]._42 > -0.2f) {
 				CGameObject::Render(pd3dCommandList, pCamera, &m_pxmf4x4Transforms[i]);
-			}
+			
 		}
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -483,9 +495,6 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			SetMesh(x + (z * cxBlocks), pHeightMapGridMesh);
 		}
 	}
-	CShader *pShader = new CShader();
-	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
-	SetShader(pShader);
 }
 CHeightMapTerrain::~CHeightMapTerrain(void)
 {

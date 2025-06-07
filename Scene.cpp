@@ -178,20 +178,15 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_pYWObjects->SetPosition(0.0f, 1.0f, 0.0f);
 	m_pYWObjects->UpdateBoundingBox();
 
-	XMFLOAT3 xmf3Scale(8.0f, 2.0f, 8.0f);
-	XMFLOAT4 xmf4Color(0.0f, 0.2f, 0.0f, 0.0f);
-
-#ifdef _WITH_TERRAIN_PARTITION
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
-		m_pd3dGraphicsRootSignature, _T("Models/HeightMap.raw"), 257, 257, 17,
-		17, xmf3Scale, xmf4Color);
-#else
+	XMFLOAT3 xmf3Scale(1.0f, 1.0f, 1.0f);
+	XMFLOAT4 xmf4Color(1.0f, 1.0f, 1.0f, 0.0f);
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
 		m_pd3dGraphicsRootSignature, _T("Models/HeightMap.raw"), 257, 257, 257,
 		257, xmf3Scale, xmf4Color);
-#endif
-
+	m_pTerrain->SetPosition(-128.0f, -150.0f, -128.0f);
+	m_pTerrain->SetColor(XMFLOAT3(0.2f, 0.2f, 0.2f));
 	m_pTerrain->SetShader(pShader);
+	m_pTerrain->UpdateBoundingBox();
 }
 
 void CTankScene::ReleaseObjects()
@@ -228,6 +223,7 @@ void CTankScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 
 	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 	if (m_pPlayer) m_pPlayer->Render(pd3dCommandList, pCamera);
+	/*
 	if (m_pFloorObject) {
 		for (int i = 0; i < 20; i++) {
 			for (int j = 0; j < 20; j++) {
@@ -236,6 +232,7 @@ void CTankScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 			}
 		}
 	}
+	*/
 	for (int i = 0; i < m_nTanks; i++) {
 		
 		if (m_pTank[i]->IsExist()) {
@@ -486,9 +483,17 @@ void CTankScene::CheckBulletByObjectCollisions()
 
 void CTankScene::Animate(float fElapsedTime)
 {
+	XMFLOAT3 terrainWorldPos = m_pTerrain->GetPosition();
 	for (int i = 0; i < m_nTanks; i++) {
 		if (m_pTank[i]) {
 			m_pTank[i]->Animate(fElapsedTime);
+
+			XMFLOAT3 xmf3Position = m_pTank[i]->GetPosition();
+			float local_x = xmf3Position.x - terrainWorldPos.x;
+			float local_z = xmf3Position.z - terrainWorldPos.z;
+			m_pTank[i]->Height = m_pTerrain->GetHeight(local_x, local_z) + terrainWorldPos.y;
+
+			m_pTank[i]->Fall(G);
 			if (m_pTank[i]->IsBlowingUp()) {
 				for (int j = 0; j < EXPLOSION_DEBRISES; j++) {
 					m_pTank[i]->m_pExplosionObjects->m_pxmf4x4Transforms[j] = m_pTank[i]->m_pxmf4x4Transforms[j];
@@ -499,7 +504,15 @@ void CTankScene::Animate(float fElapsedTime)
 	}
 
 	CTankPlayer* pTankPlayer = dynamic_cast<CTankPlayer*>(m_pPlayer);
+	
 	pTankPlayer->Animate(fElapsedTime);
+
+	XMFLOAT3 xmf3Position = pTankPlayer->GetPosition();
+	float local_x = xmf3Position.x - terrainWorldPos.x;
+	float local_z = xmf3Position.z - terrainWorldPos.z;
+	pTankPlayer->Height = m_pTerrain->GetHeight(local_x, local_z) + terrainWorldPos.y;
+
+	pTankPlayer->Fall(G);
 	if (m_pYWObjects && GameSet >= 10) m_pYWObjects->Animate(fElapsedTime);
 
 	CheckPlayerByObjectCollisions(fElapsedTime);

@@ -64,6 +64,10 @@ public:
 
 	int PickObjectByRayIntersection(XMVECTOR& xmvPickPosition, XMMATRIX& xmmtxView, float* pfHitDistance);
 	void GenerateRayForPicking(XMVECTOR& xmvPickPosition, XMMATRIX& xmmtxView, XMVECTOR& xmvPickRayOrigin, XMVECTOR& xmvPickRayDirection);
+
+	float FallingSpeed = 0.0f;
+	float Height;
+	void Fall(float G);
 };
 
 class CCubeObject : public CGameObject
