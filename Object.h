@@ -67,7 +67,7 @@ public:
 
 	float FallingSpeed = 0.0f;
 	float Height;
-	void Fall(float G);
+	void Fall(float G, XMFLOAT3 Normal);
 };
 
 class CCubeObject : public CGameObject
@@ -166,9 +166,23 @@ public:
 		return(m_pHeightMapImage->GetHeight(x /
 			m_xmf3Scale.x, z / m_xmf3Scale.z) * m_xmf3Scale.y);
 	}
+	float GetHeight(XMFLOAT3 xmf3Position)
+	{
+		XMFLOAT3 terrainWorldPos = GetPosition();
+		float local_x = xmf3Position.x - terrainWorldPos.x;
+		float local_z = xmf3Position.z - terrainWorldPos.z;
+		return (GetHeight(local_x, local_z) + terrainWorldPos.y);
+	}
 	XMFLOAT3 GetNormal(float x, float z) {
 		return(m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z /
 			m_xmf3Scale.z)));
+	}
+	XMFLOAT3 GetNormal(XMFLOAT3 xmf3Position)
+	{
+		XMFLOAT3 terrainWorldPos = GetPosition();
+		float local_x = xmf3Position.x - terrainWorldPos.x;
+		float local_z = xmf3Position.z - terrainWorldPos.z;
+		return GetNormal(local_x, local_z);
 	}
 	int GetHeightMapWidth() { return(m_pHeightMapImage->GetHeightMapWidth()); }
 	int GetHeightMapLength() { return(m_pHeightMapImage->GetHeightMapLength()); }

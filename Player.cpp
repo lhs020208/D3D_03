@@ -317,14 +317,20 @@ void CTankPlayer::Animate(float fElapsedTime)
 {
 	XMFLOAT3 look = GetLook();
 	XMFLOAT3 right = GetRight();
+	XMFLOAT3 moveVec = { 0.0f, 0.0f, 0.0f };
 
-	float speed = fElapsedTime * 0.5f * 10;
+	float speed = fElapsedTime * 0.5f;
 
-	m_xmf3MoveVector = {
-	   right.x * move_x * speed + look.x * move_z * speed,
-	   0.0f,
-	   right.z * move_x * speed + look.z * move_z * speed
-	};
+	moveVec.x += right.x * move_x * speed;
+	moveVec.z += right.z * move_x * speed;
+
+	moveVec.x += look.x * move_z * speed;
+	moveVec.z += look.z * move_z * speed;
+
+	XMFLOAT3 now_pos = GetPosition();
+	SetPosition(now_pos.x + moveVec.x, now_pos.y, now_pos.z + moveVec.z);
+
+	m_pShild->SetPosition(now_pos.x + moveVec.x, now_pos.y, now_pos.z + moveVec.z);
 
 	CTankPlayer::OnPrepareRender();
 
@@ -415,7 +421,7 @@ CCamera* CTankPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 	return(m_pCamera);
 }
 
-void CTankPlayer::Fall(float G)
+void CTankPlayer::Fall(float G, XMFLOAT3 Normal)
 {
 	FallingSpeed += G;
 	XMFLOAT3 xmf3Position = GetPosition();
@@ -425,6 +431,21 @@ void CTankPlayer::Fall(float G)
 	{
 		xmf3Position.y = Height;
 		FallingSpeed = 0.0f;
+		// 1. Up 벡터를 Normal로 설정
+		XMFLOAT3 xmf3Up = Vector3::Normalize(Normal);
+
+		// 2. 기존 Look, Right 벡터 가져오기
+		XMFLOAT3 xmf3Look = m_xmf3Look;   // 멤버벡터 사용!
+		XMFLOAT3 xmf3Right = m_xmf3Right;
+
+		// 3. Right, Look 재계산
+		xmf3Right = Vector3::Normalize(Vector3::CrossProduct(xmf3Look, xmf3Up, true));
+		xmf3Look = Vector3::Normalize(Vector3::CrossProduct(xmf3Up, xmf3Right, true));
+
+		// 4. 실제 Player 멤버 벡터에 반영
+		m_xmf3Up = xmf3Up;
+		m_xmf3Right = xmf3Right;
+		m_xmf3Look = xmf3Look;
 	}
 
 	SetPosition(xmf3Position);

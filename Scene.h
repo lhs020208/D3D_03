@@ -56,16 +56,11 @@ public:
 	void CTankScene::CheckTankByBulletCollisions();
 	void CTankScene::CheckPlayerByBulletCollisions();
 	void CTankScene::CheckPlayerByObjectCollisions(float fElapsedTime);
-	void CTankScene::CheckBulletByObjectCollisions();
 
 private:
-	CCubeObject* m_pFloorObject;
 
 	static const int m_nTanks = 10;
 	CTankObject* m_pTank[m_nTanks];
-
-	static const int m_nCubeObjects = 5;
-	CCubeObject* m_pCubeObjects[m_nCubeObjects];
 
 	int GameSet = 0;
 	CTitleObject* m_pYWObjects;
