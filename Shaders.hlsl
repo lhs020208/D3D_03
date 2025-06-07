@@ -19,6 +19,12 @@ cbuffer cbCameraInfo : register(b2)
 	float3		gf3CameraPosition : packoffset(c8);
 };
 
+cbuffer cbLightInfo : register(b3)
+{
+    float3 gf3LightDirection;
+    float3 gf3LightColor;
+}
+
 struct VS_INPUT
 {
 	float3		position : POSITION;
@@ -48,12 +54,12 @@ VS_OUTPUT VSPseudoLighting(VS_INPUT input)
 	return(output);
 }
 
-static float3 gf3AmbientLightColor = float3(0.15f, 0.15f, 0.15f);
-static float3 gf3AmbientSpecularColor = float3(0.15f, 0.15f, 0.15f);
+static float3 gf3AmbientLightColor = float3(1.0f, 1.0f, 1.0f);
+static float3 gf3AmbientSpecularColor = float3(1.0f, 1.0f, 1.0f);
 
-static float3 gf3LightDirection = float3(1.4142f, 1.4142f * 0.5f, 1.4142f * 0.5f);
-static float3 gf3LightColor = float3(0.65f, 0.65f, 0.65f);
-static float3 gf3SpecularColor = float3(0.85f, 0.85f, 0.85f);
+//static float3 gf3LightDirection = float3(1.4142f, 1.4142f * 0.5f, 1.4142f * 0.5f);
+//static float3 gf3LightColor = float3(0.65f, 0.65f, 0.65f);
+static float3 gf3SpecularColor = float3(1.0f, 1.0f, 1.0f);
 
 static float gfSpecular = 2.0f;
 static float gfGlossiness = 0.8f;
@@ -111,5 +117,37 @@ inline float NDFBlinnPhongNormalizedTerm(float NdotH, float fRoughnessToSpecPowe
 
 float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
 {
-    return float4(gf3ObjectColor, 1.0f);
+	// Normalize normal
+    float3 N = normalize(input.normalW);
+
+    // 조명 방향(단위벡터, -붙이면 '빛이 오는 방향')
+    float3 L = normalize(-gf3LightDirection);
+
+    // 카메라 방향
+    float3 V = normalize(gf3CameraPosition - input.positionW);
+
+    // Half vector (Blinn-Phong)
+    float3 H = normalize(L + V);
+
+    // 내적 계산
+    float NdotL = saturate(dot(N, L));
+    float NdotV = saturate(dot(N, V));
+    float NdotH = saturate(dot(N, H));
+
+    // 앰비언트 항
+    float3 ambient = gf3AmbientLightColor * gf3ObjectColor;
+
+    // 디퓨즈 항
+    float3 diffuse = gf3LightColor * gf3ObjectColor * NdotL;
+
+    // 스페큘러 항
+    float shininess = 8.0f; // 하이라이트 강도 (임의 값, 조정 가능)
+    float3 specular = gf3SpecularColor * pow(NdotH, shininess);
+	
+    // 합산
+    float3 finalColor = ambient + diffuse + specular;
+	
+    return float4(finalColor, 1.0f);
+
+    //return float4(gf3ObjectColor, 1.0f);
 }
