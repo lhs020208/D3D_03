@@ -57,8 +57,6 @@ VS_OUTPUT VSPseudoLighting(VS_INPUT input)
 static float3 gf3AmbientLightColor = float3(1.0f, 1.0f, 1.0f);
 static float3 gf3AmbientSpecularColor = float3(1.0f, 1.0f, 1.0f);
 
-//static float3 gf3LightDirection = float3(1.4142f, 1.4142f * 0.5f, 1.4142f * 0.5f);
-//static float3 gf3LightColor = float3(0.65f, 0.65f, 0.65f);
 static float3 gf3SpecularColor = float3(1.0f, 1.0f, 1.0f);
 
 static float gfSpecular = 2.0f;
@@ -141,7 +139,7 @@ float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
     float3 diffuse = gf3LightColor * gf3ObjectColor * NdotL;
 
     // 스페큘러 항
-    float shininess = 8.0f; // 하이라이트 강도 (임의 값, 조정 가능)
+    float shininess = 64.0f; // 하이라이트 강도 (임의 값, 조정 가능)
     float3 specular = gf3SpecularColor * pow(NdotH, shininess);
 	
     // 합산

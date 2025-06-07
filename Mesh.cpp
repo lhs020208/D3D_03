@@ -368,14 +368,15 @@ CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device* pd3dDevice,
 			XMFLOAT3 xmf3Position = XMFLOAT3((x * m_xmf3Scale.x), OnGetHeight(x, z, pContext),
 				(z * m_xmf3Scale.z));
 			XMFLOAT4 xmf3Color = Vector4::Add(OnGetColor(x, z, pContext), xmf4Color);
-			pVertices[i] = CDiffusedVertex(xmf3Position, xmf3Color);
+			XMFLOAT3 normal = ((CHeightMapImage*)pContext)->GetHeightMapNormal(x, z);
+			pVertices[i] = CDiffusedVertex(xmf3Position, xmf3Color, normal);
 			if (fHeight < fMinHeight) fMinHeight = fHeight;
 			if (fHeight > fMaxHeight) fMaxHeight = fHeight;
 		}
 	}
 	m_pd3dPositionBuffer = ::CreateBufferResource(
 		pd3dDevice, pd3dCommandList,
-		pVertices, m_nStride * m_nVertices,
+		pVertices, sizeof(CDiffusedVertex) * m_nVertices,
 		D3D12_HEAP_TYPE_DEFAULT,
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
 		&m_pd3dPositionUploadBuffer

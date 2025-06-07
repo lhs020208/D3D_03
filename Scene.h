@@ -58,7 +58,7 @@ public:
 	void CTankScene::CheckPlayerByObjectCollisions(float fElapsedTime);
 
 private:
-	XMFLOAT3 m_xmf3LightDirection = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	XMFLOAT3 m_xmf3LightDirection = XMFLOAT3(0.0f, -1.0f, 0.0f);
 	XMFLOAT3 m_xmf3LightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
 
 	static const int m_nTanks = 10;
