@@ -435,7 +435,7 @@ void CGameFramework::BuildObjects()
 
 	m_pPlayer = new CTankPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
 	CMesh* pCubeMesh = new CMesh(m_pd3dDevice, m_pd3dCommandList, "Models/Tank.obj");
-	m_pPlayer->SetMesh(pCubeMesh);
+	m_pPlayer->SetMesh(0,pCubeMesh);
 	m_pPlayer->SetPosition(0.0f, 0.0f, 0.0f);
 	m_pPlayer->SetCameraOffset(XMFLOAT3(0.0f, 0.5f, -3.0f));
 	m_pCamera = m_pPlayer->GetCamera();

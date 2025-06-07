@@ -69,4 +69,8 @@ private:
 
 	int GameSet = 0;
 	CTitleObject* m_pYWObjects;
+
+	CHeightMapTerrain* m_pTerrain = NULL;
+public:
+	CHeightMapTerrain* GetTerrain() { return(m_pTerrain); }
 };

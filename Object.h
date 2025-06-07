@@ -12,19 +12,20 @@ class CShader;
 class CGameObject
 {
 public:
-	CGameObject();
+	CGameObject(int nMeshes = 1);
 	virtual ~CGameObject();
 
 public:
 	XMFLOAT4X4						m_xmf4x4World;
-	CMesh							*m_pMesh = NULL;
+	CMesh** m_ppMeshes = NULL;
+	int m_nMeshes = 0;
 
 	CShader							*m_pShader = NULL;
 
 	XMFLOAT3						m_xmf3Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	BoundingOrientedBox				m_xmOOBB = BoundingOrientedBox();
 
-	void SetMesh(CMesh *pMesh);
+	void SetMesh(int nIndex, CMesh* pMesh);
 	void SetShader(CShader *pShader);
 
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -68,8 +69,6 @@ public:
 class CCubeObject : public CGameObject
 {
 public:
-	CCubeObject();
-	virtual ~CCubeObject();
 
 	virtual void Animate(float fElapsedTime) override;
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
@@ -79,8 +78,6 @@ public:
 class CTitleObject : public CGameObject
 {
 public:
-	CTitleObject();
-	virtual ~CTitleObject();
 
 	virtual void Animate(float fElapsedTime) override;
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
@@ -107,8 +104,6 @@ public:
 class CExplosionObject : public CGameObject
 {
 public:
-	CExplosionObject() {}
-	virtual ~CExplosionObject() {}
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
 	XMFLOAT4X4 m_pxmf4x4Transforms[EXPLOSION_DEBRISES];
@@ -118,8 +113,6 @@ public:
 class CTankObject : public CGameObject
 {
 public:
-	CTankObject() {}
-	virtual ~CTankObject() {}
 
 	virtual void Animate(float fElapsedTime) override;
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
@@ -154,7 +147,6 @@ private:
 class CHeightMapTerrain : public CGameObject
 {
 public:
-	virtual void UpdateBoundingBox() override;
 	CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 		* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, LPCTSTR pFileName, int
 		nWidth, int nLength, int nBlockWidth, int nBlockLength, XMFLOAT3 xmf3Scale, XMFLOAT4
@@ -176,7 +168,6 @@ public:
 	}
 	int GetHeightMapWidth() { return(m_pHeightMapImage->GetHeightMapWidth()); }
 	int GetHeightMapLength() { return(m_pHeightMapImage->GetHeightMapLength()); }
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }

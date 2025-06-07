@@ -292,7 +292,7 @@ CTankPlayer::CTankPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	m_pBullet = new CGameObject();
 	CMesh* pMesh = new CMesh(pd3dDevice, pd3dCommandList, "Models/Bullet.obj");
-	m_pBullet->SetMesh(pMesh);
+	m_pBullet->SetMesh(0,pMesh);
 	m_pBullet->SetColor(XMFLOAT3(m_xmf3Color));
 	m_pBullet->SetPosition(GetPosition());
 	m_pBullet->SetShader(pShader);
@@ -300,7 +300,7 @@ CTankPlayer::CTankPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	m_pShild = new CCubeObject();
 	CCubeMesh* pCubeMesh = new CCubeMesh(pd3dDevice, pd3dCommandList, 0.6f, 0.6f, 0.6f);
-	m_pShild->SetMesh(pCubeMesh);
+	m_pShild->SetMesh(0,pCubeMesh);
 	m_pShild->SetColor(XMFLOAT3(m_xmf3Color));
 	m_pShild->SetPosition(GetPosition());
 	m_pShild->SetShader(pShader);

@@ -24,22 +24,43 @@ XMVECTOR RandomUnitVectorOnSphere()
 	}
 }
 
-CGameObject::CGameObject()
+CGameObject::CGameObject(int nMeshes)
 {
 	m_xmf4x4World = Matrix4x4::Identity();
+	m_nMeshes = nMeshes;
+	m_ppMeshes = NULL;
+	if (m_nMeshes > 0)
+	{
+		m_ppMeshes = new CMesh * [m_nMeshes];
+		for (int i = 0; i < m_nMeshes; i++) m_ppMeshes[i] = NULL;
+	}
 }
 
 CGameObject::~CGameObject()
 {
-	if (m_pMesh) m_pMesh->Release();
-	if (m_pShader) m_pShader->Release();
+	if (m_ppMeshes)
+	{
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) m_ppMeshes[i]->Release();
+			m_ppMeshes[i] = NULL;
+		}
+		delete[] m_ppMeshes;
+	}
+	if (m_pShader)
+	{
+		m_pShader->ReleaseShaderVariables();
+		m_pShader->Release();
+	}
 }
 
-void CGameObject::SetMesh(CMesh *pMesh)
+void CGameObject::SetMesh(int nIndex, CMesh* pMesh)
 {
-	if (m_pMesh) m_pMesh->Release();
-	m_pMesh = pMesh;
-	if (m_pMesh) m_pMesh->AddRef();
+	if (m_ppMeshes && nIndex >= 0 && nIndex < m_nMeshes) {
+		if (m_ppMeshes[nIndex]) m_ppMeshes[nIndex]->Release();
+		m_ppMeshes[nIndex] = pMesh;
+		if (pMesh) pMesh->AddRef();
+	}
 }
 
 void CGameObject::SetShader(CShader *pShader)
@@ -81,27 +102,41 @@ void CGameObject::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pC
 {
 	OnPrepareRender();
 
-	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
-
 	UpdateShaderVariables(pd3dCommandList);
-
-	if (m_pMesh) m_pMesh->Render(pd3dCommandList);
+	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
+	if (m_ppMeshes)
+	{
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) m_ppMeshes[i]->Render(pd3dCommandList);
+		}
+	}
 }
 
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, XMFLOAT4X4* pxmf4x4World)
 {
 	OnPrepareRender();
-
-	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
-
 	UpdateShaderVariables(pd3dCommandList, pxmf4x4World);
 
-	if (m_pMesh) m_pMesh->Render(pd3dCommandList);
+	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
+	if (m_ppMeshes)
+	{
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) m_ppMeshes[i]->Render(pd3dCommandList);
+		}
+	}
 }
 
 void CGameObject::ReleaseUploadBuffers()
 {
-	if (m_pMesh) m_pMesh->ReleaseUploadBuffers();
+	if (m_ppMeshes)
+	{
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) m_ppMeshes[i]->ReleaseUploadBuffers();
+		}
+	}
 }
 
 void CGameObject::SetPosition(float x, float y, float z)
@@ -190,9 +225,12 @@ void CGameObject::LookAt(XMFLOAT3& xmf3LookAt, XMFLOAT3& xmf3Up)
 
 void CGameObject::UpdateBoundingBox()
 {
-	if (m_pMesh)
+	if (m_ppMeshes)
 	{
-		m_pMesh->m_xmOOBB.Transform(m_xmOOBB, XMLoadFloat4x4(&m_xmf4x4World));
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) m_ppMeshes[i]->m_xmOOBB.Transform(m_xmOOBB, XMLoadFloat4x4(&m_xmf4x4World));
+		}
 		XMStoreFloat4(&m_xmOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&m_xmOOBB.Orientation)));
 	}
 }
@@ -215,8 +253,11 @@ int CGameObject::PickObjectByRayIntersection(XMVECTOR& xmvPickPosition, XMMATRIX
 	xmvPickRayDir = XMVector3TransformNormal(xmvPickRayDir, xmmtxWorldInv);
 	xmvPickRayDir = XMVector3Normalize(xmvPickRayDir);
 
-	if (m_pMesh) return m_pMesh->CheckRayIntersection(xmvPickRayOrigin, xmvPickRayDir, pfHitDistance);
-
+	if (m_ppMeshes) 
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) return m_ppMeshes[i]->CheckRayIntersection(xmvPickRayOrigin, xmvPickRayDir, pfHitDistance);
+		}
 	return 0;
 }
 void CGameObject::GenerateRayForPicking(XMVECTOR& xmvPickPosition, XMMATRIX& xmmtxView, XMVECTOR& xmvPickRayOrigin, XMVECTOR& xmvPickRayDirection)
@@ -236,13 +277,6 @@ void CGameObject::SetRotationTransform(XMFLOAT4X4* pmxf4x4Transform)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-CCubeObject::CCubeObject()
-{
-}
-CCubeObject::~CCubeObject()
-{
-}
 void CCubeObject::Animate(float fElapsedTime)
 {
 }
@@ -259,18 +293,8 @@ void CExplosionObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamer
 				CGameObject::Render(pd3dCommandList, pCamera, &m_pxmf4x4Transforms[i]);
 			}
 		}
-	
-	
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-CTitleObject::CTitleObject()
-{
-}
-
-CTitleObject::~CTitleObject()
-{
-}
-
 void CTitleObject::Animate(float fElapsedTime)
 {
 	extern CGameFramework* g_pFramework;
@@ -317,9 +341,12 @@ void CTitleObject::ReleaseUploadBuffers()
 
 void CTitleObject::UpdateBoundingBox()
 {
-	if (m_pMesh)
+	if (m_ppMeshes)
 	{
-		m_pMesh->m_xmOOBB.Transform(m_xmOOBB, XMLoadFloat4x4(&m_xmf4x4World));
+		for (int i = 0; i < m_nMeshes; i++)
+		{
+			if (m_ppMeshes[i]) m_ppMeshes[i]->m_xmOOBB.Transform(m_xmOOBB, XMLoadFloat4x4(&m_xmf4x4World));
+		}
 		XMStoreFloat4(&m_xmOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&m_xmOOBB.Orientation)));
 	}
 }
@@ -432,14 +459,17 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 {
 	m_nWidth = nWidth;
 	m_nLength = nLength;
+
 	int cxQuadsPerBlock = nBlockWidth - 1;
 	int czQuadsPerBlock = nBlockLength - 1;
+
 	m_xmf3Scale = xmf3Scale;
 	m_pHeightMapImage = new CHeightMapImage(pFileName, nWidth, nLength, xmf3Scale);
 	long cxBlocks = (m_nWidth - 1) / cxQuadsPerBlock;
 	long czBlocks = (m_nLength - 1) / czQuadsPerBlock;
 	m_nMeshes = cxBlocks * czBlocks;
 	m_ppMeshes = new CMesh*[m_nMeshes];
+
 	for (int i = 0; i < m_nMeshes; i++)m_ppMeshes[i] = NULL;
 	CHeightMapGridMesh* pHeightMapGridMesh = NULL;
 	for (int z = 0, zStart = 0; z < czBlocks; z++)
@@ -453,32 +483,11 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			SetMesh(x + (z * cxBlocks), pHeightMapGridMesh);
 		}
 	}
-	CTerrainShader *pShader = new CTerrainShader();
+	CShader *pShader = new CShader();
 	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 	SetShader(pShader);
 }
 CHeightMapTerrain::~CHeightMapTerrain(void)
 {
 	if (m_pHeightMapImage) delete m_pHeightMapImage;
-}
-void CHeightMapTerrain::UpdateBoundingBox(){
-	XMFLOAT3 center = XMFLOAT3(
-		(m_nWidth * 0.5f) * m_xmf3Scale.x,
-		0.0f,
-		(m_nLength * 0.5f) * m_xmf3Scale.z
-	);
-	XMFLOAT3 extent = XMFLOAT3(
-		(m_nWidth * 0.5f) * m_xmf3Scale.x,
-		256.0f, // 최대 높이 고려하여 임의 값 설정
-		(m_nLength * 0.5f) * m_xmf3Scale.z
-	);
-	m_xmOOBB = BoundingOrientedBox(center, extent, XMFLOAT4(0, 0, 0, 1));
-}
-
-void CHeightMapTerrain::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) {
-	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
-	UpdateShaderVariables(pd3dCommandList);
-	for (int i = 0; i < m_nMeshes; ++i) {
-		if (m_ppMeshes[i]) m_ppMeshes[i]->Render(pd3dCommandList);
-	}
 }

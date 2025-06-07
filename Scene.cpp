@@ -130,7 +130,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		m_pTank[i] = nullptr;
 		m_pTank[i] = new CTankObject();
 		CMesh* pTankMesh = new CMesh(pd3dDevice, pd3dCommandList, "Models/Tank.obj");
-		m_pTank[i]->SetMesh(pTankMesh);
+		m_pTank[i]->SetMesh(0,pTankMesh);
 		m_pTank[i]->SetShader(pShader);
 		m_pTank[i]->SetColor(XMFLOAT3(red, green, blue));
 		m_pTank[i]->SetPosition(uid_x(dre) - 9.0f, 0.0f, uid_z(dre) - 9.0f);
@@ -139,7 +139,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 		m_pTank[i]->bullet = new CGameObject();
 		CMesh* pMesh = new CMesh(pd3dDevice, pd3dCommandList, "Models/Bullet.obj");
-		m_pTank[i]->bullet->SetMesh(pMesh);
+		m_pTank[i]->bullet->SetMesh(0,pMesh);
 		m_pTank[i]->bullet->SetColor(XMFLOAT3(red, green, blue));
 		m_pTank[i]->bullet->SetPosition(-2.0f + 0.5f * i, 0.0f, 1.0f);
 		m_pTank[i]->bullet->SetShader(pShader);
@@ -147,7 +147,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 		CCubeMesh* pCubeMesh = new CCubeMesh(pd3dDevice, pd3dCommandList, 0.05f, 0.05f, 0.05f);
 		m_pTank[i]->m_pExplosionObjects = new CExplosionObject();
-		m_pTank[i]->m_pExplosionObjects->SetMesh(pCubeMesh);
+		m_pTank[i]->m_pExplosionObjects->SetMesh(0,pCubeMesh);
 		m_pTank[i]->m_pExplosionObjects->SetShader(pShader);
 		m_pTank[i]->m_pExplosionObjects->SetColor(XMFLOAT3(red, green, blue));
 		m_pTank[i]->m_pExplosionObjects->SetPosition(0.0f, 0.0f, 1.0f);
@@ -156,7 +156,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	for (int i = 0; i < m_nCubeObjects; i++) {
 		CCubeMesh* pCubeMesh = new CCubeMesh(pd3dDevice, pd3dCommandList, 1.0f, 1.0f, 1.0f);
 		m_pCubeObjects[i] = new CCubeObject();
-		m_pCubeObjects[i]->SetMesh(pCubeMesh);
+		m_pCubeObjects[i]->SetMesh(0,pCubeMesh);
 		m_pCubeObjects[i]->SetShader(pShader);
 		m_pCubeObjects[i]->SetColor(XMFLOAT3(0.0f, 0.0f, 1.0f));
 		m_pCubeObjects[i]->SetPosition((float)uid_x_int(dre), 0.3f, (float)uid_z_int(dre));
@@ -164,7 +164,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	}
 	CCubeMesh* pCubeMesh = new CCubeMesh(pd3dDevice, pd3dCommandList, 1.0f, 0.0f, 1.0f);
 	m_pFloorObject = new CCubeObject();
-	m_pFloorObject->SetMesh(pCubeMesh);
+	m_pFloorObject->SetMesh(0,pCubeMesh);
 	m_pFloorObject->SetShader(pShader);
 	m_pFloorObject->SetColor(XMFLOAT3(1.0f, 1.0f, 1.0f));
 	m_pFloorObject->SetPosition(0.0f, -0.2f, 0.0f);
@@ -172,11 +172,26 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CMesh* cTitleMesh = new CMesh(pd3dDevice, pd3dCommandList, "Models/YouWin.obj");
 	m_pYWObjects = new CTitleObject();
-	m_pYWObjects->SetMesh(cTitleMesh);
+	m_pYWObjects->SetMesh(0,cTitleMesh);
 	m_pYWObjects->SetColor(XMFLOAT3(1.0f, 0.0f, 0.0f));
 	m_pYWObjects->SetShader(pShader);
 	m_pYWObjects->SetPosition(0.0f, 1.0f, 0.0f);
 	m_pYWObjects->UpdateBoundingBox();
+
+	XMFLOAT3 xmf3Scale(8.0f, 2.0f, 8.0f);
+	XMFLOAT4 xmf4Color(0.0f, 0.2f, 0.0f, 0.0f);
+
+#ifdef _WITH_TERRAIN_PARTITION
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
+		m_pd3dGraphicsRootSignature, _T("Models/HeightMap.raw"), 257, 257, 17,
+		17, xmf3Scale, xmf4Color);
+#else
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
+		m_pd3dGraphicsRootSignature, _T("Models/HeightMap.raw"), 257, 257, 257,
+		257, xmf3Scale, xmf4Color);
+#endif
+
+	m_pTerrain->SetShader(pShader);
 }
 
 void CTankScene::ReleaseObjects()
@@ -191,6 +206,7 @@ void CTankScene::ReleaseObjects()
 	for (int i = 0; i < m_nCubeObjects; i++)
 		if (m_pCubeObjects[i])delete m_pCubeObjects[i];
 	if (m_pYWObjects) delete m_pYWObjects;
+	if (m_pTerrain) delete m_pTerrain;
 }
 void CTankScene::ReleaseUploadBuffers()
 {
@@ -203,12 +219,14 @@ void CTankScene::ReleaseUploadBuffers()
 		if (m_pCubeObjects[i]) m_pCubeObjects[i]->ReleaseUploadBuffers();
 	}
 	if (m_pYWObjects) m_pYWObjects->ReleaseUploadBuffers();
+	if (m_pTerrain) m_pTerrain->ReleaseUploadBuffers();
 }
 void CTankScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 
+	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 	if (m_pPlayer) m_pPlayer->Render(pd3dCommandList, pCamera);
 	if (m_pFloorObject) {
 		for (int i = 0; i < 20; i++) {

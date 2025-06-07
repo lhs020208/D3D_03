@@ -267,7 +267,6 @@ CCubeMesh::~CCubeMesh()
 {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
-
 CHeightMapImage::CHeightMapImage(LPCTSTR pFileName, int nWidth, int nLength, XMFLOAT3
 	xmf3Scale)
 {
@@ -296,24 +295,23 @@ CHeightMapImage::~CHeightMapImage()
 	if (m_pHeightMapPixels) delete[] m_pHeightMapPixels;
 	m_pHeightMapPixels = NULL;
 }
+
 XMFLOAT3 CHeightMapImage::GetHeightMapNormal(int x, int z)
 {
 	if ((x < 0.0f) || (z < 0.0f) || (x >= m_nWidth) || (z >= m_nLength))
 	return(XMFLOAT3(0.0f, 1.0f, 0.0f));
-
 	int nHeightMapIndex = x + (z * m_nWidth);
 	int xHeightMapAdd = (x < (m_nWidth - 1)) ? 1 : -1;
 	int zHeightMapAdd = (z < (m_nLength - 1)) ? m_nWidth : -m_nWidth;
-
 	float y1 = (float)m_pHeightMapPixels[nHeightMapIndex] * m_xmf3Scale.y;
 	float y2 = (float)m_pHeightMapPixels[nHeightMapIndex + xHeightMapAdd] * m_xmf3Scale.y;
 	float y3 = (float)m_pHeightMapPixels[nHeightMapIndex + zHeightMapAdd] * m_xmf3Scale.y;
-	
 	XMFLOAT3 xmf3Edge1 = XMFLOAT3(0.0f, y3 - y1, m_xmf3Scale.z);
 	XMFLOAT3 xmf3Edge2 = XMFLOAT3(m_xmf3Scale.x, y2 - y1, 0.0f);
 	XMFLOAT3 xmf3Normal = Vector3::CrossProduct(xmf3Edge1, xmf3Edge2, true);
 	return(xmf3Normal);
 }
+
 #define _WITH_APPROXIMATE_OPPOSITE_CORNER
 float CHeightMapImage::GetHeight(float fx, float fz)
 {
@@ -330,17 +328,17 @@ float CHeightMapImage::GetHeight(float fx, float fz)
 	bool bRightToLeft = ((z % 2) != 0);
 	if (bRightToLeft)
 	{
-			if (fzPercent >= fxPercent)
-				fBottomRight = fBottomLeft + (fTopRight - fTopLeft);
-			else
-				fTopLeft = fTopRight + (fBottomLeft - fBottomRight);
+		if (fzPercent >= fxPercent)
+			fBottomRight = fBottomLeft + (fTopRight - fTopLeft);
+		else
+			fTopLeft = fTopRight + (fBottomLeft - fBottomRight);
 	}
 	else
 	{
-			if (fzPercent < (1.0f - fxPercent))
-				fTopRight = fTopLeft + (fBottomRight - fBottomLeft);
-			else
-				fBottomLeft = fTopLeft + (fBottomRight - fTopRight);
+		if (fzPercent < (1.0f - fxPercent))
+			fTopRight = fTopLeft + (fBottomRight - fBottomLeft);
+		else
+			fBottomLeft = fTopLeft + (fBottomRight - fTopRight);
 	}
 #endif
 	float fTopHeight = fTopLeft * (1 - fxPercent) + fTopRight * fxPercent;
@@ -350,9 +348,9 @@ float CHeightMapImage::GetHeight(float fx, float fz)
 }
 
 CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device* pd3dDevice,
-	ID3D12GraphicsCommandList* pd3dCommandList, int xStart, int zStart, int nWidth, int nLength,
-	XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color, void* pContext)
-	: CMesh(pd3dDevice, pd3dCommandList)
+	ID3D12GraphicsCommandList* pd3dCommandList, int xStart, int zStart, int nWidth, int
+	nLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color, void* pContext) : CMesh(pd3dDevice,
+		pd3dCommandList)
 {
 	m_nVertices = nWidth * nLength;
 	m_nStride = sizeof(CDiffusedVertex);
@@ -360,79 +358,73 @@ CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device* pd3dDevice,
 	m_nWidth = nWidth;
 	m_nLength = nLength;
 	m_xmf3Scale = xmf3Scale;
-
 	CDiffusedVertex* pVertices = new CDiffusedVertex[m_nVertices];
 
-	float fMinHeight = FLT_MAX, fMaxHeight = -FLT_MAX;
-	for (int i = 0, z = zStart; z < (zStart + nLength); z++) {
-		for (int x = xStart; x < (xStart + nWidth); x++, i++) {
-			float fHeight = OnGetHeight(x, z, pContext);
-			XMFLOAT3 pos = XMFLOAT3(x * xmf3Scale.x, fHeight, z * xmf3Scale.z);
-			XMFLOAT4 color = Vector4::Add(OnGetColor(x, z, pContext), xmf4Color);
-			pVertices[i] = CDiffusedVertex(pos, color);
+	float fHeight = 0.0f, fMinHeight = +FLT_MAX, fMaxHeight = -FLT_MAX;
+	for (int i = 0, z = zStart; z < (zStart + nLength); z++)
+	{
+		for (int x = xStart; x < (xStart + nWidth); x++, i++)
+		{
+			XMFLOAT3 xmf3Position = XMFLOAT3((x * m_xmf3Scale.x), OnGetHeight(x, z, pContext),
+				(z * m_xmf3Scale.z));
+			XMFLOAT4 xmf3Color = Vector4::Add(OnGetColor(x, z, pContext), xmf4Color);
+			pVertices[i] = CDiffusedVertex(xmf3Position, xmf3Color);
 			if (fHeight < fMinHeight) fMinHeight = fHeight;
 			if (fHeight > fMaxHeight) fMaxHeight = fHeight;
 		}
 	}
-
-	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices,
-		m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT,
-		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+	m_pd3dPositionBuffer = ::CreateBufferResource(
+		pd3dDevice, pd3dCommandList,
+		pVertices, m_nStride * m_nVertices,
+		D3D12_HEAP_TYPE_DEFAULT,
+		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+		&m_pd3dPositionUploadBuffer
+	);
 
 	m_nVertexBufferViews = 1;
+	if (m_pd3dVertexBufferViews) delete[] m_pd3dVertexBufferViews;
 	m_pd3dVertexBufferViews = new D3D12_VERTEX_BUFFER_VIEW[1];
 	m_pd3dVertexBufferViews[0].BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
 	m_pd3dVertexBufferViews[0].StrideInBytes = m_nStride;
 	m_pd3dVertexBufferViews[0].SizeInBytes = m_nStride * m_nVertices;
 
+	if (m_pxmf3Positions) delete[] m_pxmf3Positions;
 	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
-	for (int i = 0; i < m_nVertices; ++i)
+	for (int i = 0; i < m_nVertices; i++)
 		m_pxmf3Positions[i] = pVertices[i].m_xmf3Position;
-	delete[] pVertices;
 
+	delete[] pVertices;
 	m_nIndices = ((nWidth * 2) * (nLength - 1)) + ((nLength - 1) - 1);
 	UINT* pnIndices = new UINT[m_nIndices];
-
-	for (int j = 0, z = 0; z < nLength - 1; z++) {
-		if ((z % 2) == 0) {
-			for (int x = 0; x < nWidth; x++) {
+	for (int j = 0, z = 0; z < nLength - 1; z++)
+	{
+		if ((z % 2) == 0)
+		{
+			for (int x = 0; x < nWidth; x++)
+			{
 				if ((x == 0) && (z > 0)) pnIndices[j++] = (UINT)(x + (z * nWidth));
 				pnIndices[j++] = (UINT)(x + (z * nWidth));
 				pnIndices[j++] = (UINT)((x + (z * nWidth)) + nWidth);
 			}
 		}
-		else {
-			for (int x = nWidth - 1; x >= 0; x--) {
+		else
+		{
+			for (int x = nWidth - 1; x >= 0; x--)
+			{
 				if (x == (nWidth - 1)) pnIndices[j++] = (UINT)(x + (z * nWidth));
 				pnIndices[j++] = (UINT)(x + (z * nWidth));
 				pnIndices[j++] = (UINT)((x + (z * nWidth)) + nWidth);
 			}
 		}
 	}
-
 	m_pd3dIndexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pnIndices,
 		sizeof(UINT) * m_nIndices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER,
 		&m_pd3dIndexUploadBuffer);
-
 	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
 	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
-
-	XMFLOAT3 center = XMFLOAT3(
-		(xStart + (nWidth * 0.5f)) * xmf3Scale.x,
-		(fMinHeight + fMaxHeight) * 0.5f,
-		(zStart + (nLength * 0.5f)) * xmf3Scale.z
-	);
-	XMFLOAT3 extent = XMFLOAT3(
-		(nWidth * 0.5f) * xmf3Scale.x,
-		(fMaxHeight - fMinHeight) * 0.5f,
-		(nLength * 0.5f) * xmf3Scale.z
-	);
-	m_xmOOBB = BoundingOrientedBox(center, extent, XMFLOAT4(0, 0, 0, 1));
-
 	delete[] pnIndices;
 }
-
 CHeightMapGridMesh::~CHeightMapGridMesh()
 {
 }
