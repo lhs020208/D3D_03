@@ -68,7 +68,7 @@ private:
 	CTitleObject* m_pYWObjects;
 
 	CHeightMapTerrain* m_pTerrain = NULL;
-	float G = 0.001f;
+	float G = 0.01f;
 public:
 	CHeightMapTerrain* GetTerrain() { return(m_pTerrain); }
 };
