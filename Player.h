@@ -117,7 +117,7 @@ public:
 	CCubeObject* m_pShild;
 	CGameObject* m_pBullet;
 
-	CTankObject* ToggleObject;
+	CTankObject* ToggleObject = nullptr;
 	bool Toggle = false;
 private:
 	XMFLOAT3 m_xmf3MoveVector = { 0.0f, 0.0f, 0.0f };

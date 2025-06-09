@@ -156,6 +156,10 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		m_pTank[i]->m_pExplosionObjects->SetColor(XMFLOAT3(red, green, blue));
 		m_pTank[i]->m_pExplosionObjects->SetPosition(0.0f, 0.0f, 1.0f);
 		m_pTank[i]->m_pExplosionObjects->UpdateBoundingBox();
+
+		for (int j = 0; j < EXPLOSION_DEBRISES; j++) {
+			m_pTank[i]->m_pExplosionObjects->Draw[j] = false;
+		}
 	}
 
 	CMesh* cTitleMesh = new CMesh(pd3dDevice, pd3dCommandList, "Models/YouWin.obj");
@@ -404,33 +408,28 @@ void CTankScene::CheckPlayerByBulletCollisions()
 	}
 }
 
-void CTankScene::CheckPlayerByObjectCollisions(float fElapsedTime)
+void CTankScene::CheckExpByTerrain()
 {
-	CTankPlayer* pTankPlayer = dynamic_cast<CTankPlayer*>(m_pPlayer);
-	if (!pTankPlayer) return;
+	for (int i = 0; i < 10; i++)
+	{
+		if (m_pTank[i]->IsExist() && m_pTank[i]->IsBlowingUp()) {
+			for (int j = 0; j < EXPLOSION_DEBRISES; j++)
+			if (m_pTank[i]->m_pExplosionObjects->Draw[j])
+			{
+				XMFLOAT3 xmf3Position;
+				XMFLOAT4X4& xmf4x4Transform = m_pTank[i]->m_pxmf4x4Transforms[j];
+				xmf3Position = XMFLOAT3(xmf4x4Transform._41, xmf4x4Transform._42, xmf4x4Transform._43);
 
-	const XMFLOAT3& moveVec = pTankPlayer->GetMoveVector();
-
-	BoundingOrientedBox movedBox = pTankPlayer->m_xmOOBB;
-	movedBox.Center.x += moveVec.x;
-	movedBox.Center.z += moveVec.z;
-
-	bool blocked = false;
-
-	if (!blocked) {
-		XMFLOAT3 nowPos = pTankPlayer->GetPosition();
-		pTankPlayer->SetPosition(nowPos.x + moveVec.x, nowPos.y, nowPos.z + moveVec.z);
-		if (pTankPlayer->m_pShild) {
-			pTankPlayer->m_pShild->SetPosition(nowPos.x + moveVec.x, nowPos.y, nowPos.z + moveVec.z);
+				float fHeight = m_pTerrain->GetHeight(xmf3Position);
+				if (xmf3Position.y < fHeight) {
+					m_pTank[i]->m_pExplosionObjects->Draw[j] = false;
+					m_pTank[i]->m_pExplosionObjects->m_pxmf4x4Transforms[j] = Matrix4x4::Identity();
+					m_pTank[i]->m_pExplosionObjects->m_pxmf3SphereVectors[j] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+				}
+			}
 		}
 	}
-
-	pTankPlayer->UpdateBoundingBox();
-	if (pTankPlayer->m_pShild) pTankPlayer->m_pShild->UpdateBoundingBox();
-
-	pTankPlayer->ClearMoveVector();
 }
-
 
 void CTankScene::Animate(float fElapsedTime)
 {
@@ -460,7 +459,7 @@ void CTankScene::Animate(float fElapsedTime)
 
 	if (m_pYWObjects && GameSet >= 10) m_pYWObjects->Animate(fElapsedTime);
 
-	CheckPlayerByObjectCollisions(fElapsedTime);
 	CheckTankByBulletCollisions();
 	CheckPlayerByBulletCollisions();
+	CheckExpByTerrain();
 }

@@ -324,8 +324,8 @@ void CCubeObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 void CExplosionObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 		for (int i = 0; i < EXPLOSION_DEBRISES; i++) {
+			if (Draw[i])
 				CGameObject::Render(pd3dCommandList, pCamera, &m_pxmf4x4Transforms[i]);
-			
 		}
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -340,10 +340,7 @@ void CTitleObject::Animate(float fElapsedTime)
 
 void CTitleObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	if (!m_bBlowingUp)
-	{
-		CGameObject::Render(pd3dCommandList, pCamera);
-	}
+	CGameObject::Render(pd3dCommandList, pCamera);
 }
 
 void CTitleObject::Rotate(float fPitch, float fYaw, float fRoll)
@@ -358,15 +355,6 @@ void CTitleObject::Rotate(XMFLOAT3& xmf3RotationAxis, float fAngle)
 	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
 }
 
-void CTitleObject::PrepareExplosion()
-{
-	m_bBlowingUp = true;
-	m_fElapsedTimes = 0.0f;
-
-	for (int i = 0; i < EXPLOSION_DEBRISES; i++) {
-		XMStoreFloat3(&m_pxmf3SphereVectors[i], RandomUnitVectorOnSphere());
-	}
-}
 
 void CTitleObject::ReleaseUploadBuffers()
 {
@@ -477,6 +465,7 @@ void CTankObject::PrepareExplosion()
 
 	for (int i = 0; i < EXPLOSION_DEBRISES; i++) {
 		XMStoreFloat3(&m_pxmf3SphereVectors[i], RandomUnitVectorOnSphere());
+		m_pExplosionObjects->Draw[i] = true;
 	}
 }
 

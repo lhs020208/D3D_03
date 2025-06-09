@@ -91,24 +91,16 @@ public:
 
 	void Rotate(float fPitch = 0.0f, float fYaw = 10.0f, float fRoll = 0.0f);
 	void Rotate(XMFLOAT3& xmf3Axis, float fAngle);
-	void PrepareExplosion();
-	bool IsBlowingUp() { return m_bBlowingUp; }
 	bool m_bSceneRequested = false;
 
 public:
-	bool m_bBlowingUp = false;
-	bool m_bPrevBlowingUp = false;
 	float m_fElapsedTimes = 0.0f;
 	float m_fDuration = 2.0f;
-	float m_fExplosionSpeed = 10.0f;
-	float m_fExplosionRotation = 360.0f;
-
-	XMFLOAT4X4 m_pxmf4x4Transforms[EXPLOSION_DEBRISES];
-	XMFLOAT3 m_pxmf3SphereVectors[EXPLOSION_DEBRISES];
 };
 class CExplosionObject : public CGameObject
 {
 public:
+	bool Draw[EXPLOSION_DEBRISES];
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
 	XMFLOAT4X4 m_pxmf4x4Transforms[EXPLOSION_DEBRISES];
