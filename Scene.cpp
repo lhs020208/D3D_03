@@ -121,10 +121,8 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	default_random_engine dre{ random_device{}() };
 	uniform_real_distribution<float> uid{ 0.0f,1.0f };
 
-	uniform_real_distribution<float> uid_x{ 0,18.0f };
-	uniform_real_distribution<float> uid_z{ 0,18.0f };
-	uniform_int_distribution<int> uid_x_int(-9, 9);
-	uniform_int_distribution<int> uid_z_int(-9, 9);
+	uniform_real_distribution<float> uid_x{ 0,100.0f };
+	uniform_real_distribution<float> uid_z{ 0,100.0f };
 	uniform_real_distribution<float> uid_rot{ 0,360.0f };
 
 	for (int i = 0; i < m_nTanks; i++)
@@ -139,7 +137,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		m_pTank[i]->SetMesh(0,pTankMesh);
 		m_pTank[i]->SetShader(pShader);
 		m_pTank[i]->SetColor(XMFLOAT3(red, green, blue));
-		m_pTank[i]->SetPosition(uid_x(dre) - 9.0f, 0.0f, uid_z(dre) - 9.0f);
+		m_pTank[i]->SetPosition(uid_x(dre) - 50.0f, 0.0f, uid_z(dre) - 50.0f);
 		m_pTank[i]->Rotate(0.0f, uid_rot(dre), 0.0f);
 		m_pTank[i]->UpdateBoundingBox();
 

@@ -410,20 +410,20 @@ void CTankObject::Animate(float fElapsedTime)
 		{
 			int forward_Step = 100;
 			if (timer < forward_Step)
-				SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(GetLook(), fElapsedTime * 0.5f, false)));
-			if (timer >= forward_Step && timer < forward_Step + 90)
-				Rotate(0.0f, 2.0f, 0.0f);
-			if (timer >= forward_Step + 90 && timer < 2 * forward_Step + 90)
-				SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(GetLook(), fElapsedTime * 0.5f, false)));
-			if (timer >= 2 * forward_Step + 90 && timer < 2 * forward_Step + 180)
-				Rotate(0.0f, 2.0f, 0.0f);
+				SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(GetLook(), fElapsedTime * 0.5f * 5, false)));
+			if (timer >= forward_Step && timer < forward_Step + 30)
+				Rotate(0.0f, 6.0f, 0.0f);
+			if (timer >= forward_Step + 30 && timer < 2 * forward_Step + 30)
+				SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(GetLook(), fElapsedTime * 0.5f * 5, false)));
+			if (timer >= 2 * forward_Step + 30 && timer < 2 * forward_Step + 60)
+				Rotate(0.0f, 6.0f, 0.0f);
 
 			timer++;
-			if (timer == 2 * forward_Step + 180) timer = 0;
+			if (timer == 2 * forward_Step + 60) timer = 0;
 
 			if (shot) {
 				bullet_timer++;
-				bullet->SetPosition(Vector3::Add(bullet->GetPosition(), Vector3::ScalarProduct(bullet->GetLook(), fElapsedTime * 2.0f, false)));
+				bullet->SetPosition(Vector3::Add(bullet->GetPosition(), Vector3::ScalarProduct(bullet->GetLook(), fElapsedTime * 2.0f * 5, false)));
 				if (bullet_timer >= 200) {
 					bullet_timer = 0;
 					SwitchShot();
