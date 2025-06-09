@@ -149,7 +149,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		m_pTank[i]->bullet->SetShader(pShader);
 		m_pTank[i]->bullet->UpdateBoundingBox();
 
-		CCubeMesh* pCubeMesh = new CCubeMesh(pd3dDevice, pd3dCommandList, 0.05f, 0.05f, 0.05f);
+		CCubeMesh* pCubeMesh = new CCubeMesh(pd3dDevice, pd3dCommandList, 0.25f, 0.25f, 0.25f);
 		m_pTank[i]->m_pExplosionObjects = new CExplosionObject();
 		m_pTank[i]->m_pExplosionObjects->SetMesh(0,pCubeMesh);
 		m_pTank[i]->m_pExplosionObjects->SetShader(pShader);

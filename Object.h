@@ -142,7 +142,7 @@ private:
 	bool m_bPrevBlowingUp = false;
 	float m_fElapsedTimes = 0.0f;
 	float m_fDuration = 2.0f;
-	float m_fExplosionSpeed = 2.0f;
+	float m_fExplosionSpeed = 10.0f;
 	float m_fExplosionRotation = 360.0f;
 	int timer = 0;
 	int bullet_timer = 0;
