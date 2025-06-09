@@ -432,7 +432,13 @@ void CTankPlayer::Fall(float G, XMFLOAT3 Normal)
 		xmf3Position.y = Height;
 		FallingSpeed = 0.0f;
 		// 1. Up 벡터를 Normal로 설정
-		XMFLOAT3 xmf3Up = Vector3::Normalize(Normal);
+		XMVECTOR vFrom = XMLoadFloat3(&LastUpVector);
+		XMVECTOR vTo = XMVector3Normalize(XMLoadFloat3(&Normal));
+
+		XMVECTOR vNewUp = XMVector3Normalize(XMVectorLerp(vFrom, vTo, 0.1f));
+		XMStoreFloat3(&LastUpVector, vNewUp);
+
+		XMFLOAT3 xmf3Up = LastUpVector;
 
 		// 2. 기존 Look, Right 벡터 가져오기
 		XMFLOAT3 xmf3Look = m_xmf3Look;   // 멤버벡터 사용!

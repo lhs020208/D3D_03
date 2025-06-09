@@ -276,6 +276,7 @@ void CGameObject::SetRotationTransform(XMFLOAT4X4* pmxf4x4Transform)
 	m_xmf4x4World._31 = pmxf4x4Transform->_31; m_xmf4x4World._32 = pmxf4x4Transform->_32; m_xmf4x4World._33 = pmxf4x4Transform->_33;
 }
 
+
 void CGameObject::Fall(float G, XMFLOAT3 Normal)
 {
 	FallingSpeed += G;
@@ -286,18 +287,23 @@ void CGameObject::Fall(float G, XMFLOAT3 Normal)
 	{
 		xmf3Position.y = Height;
 		FallingSpeed = 0.0f;
-		// 1. Up 벡터를 Normal로 설정
-		XMFLOAT3 xmf3Up = Vector3::Normalize(Normal);
 
-		// 2. 기존 Look, Right 벡터 가져오기
+		// 부드러운 회전 처리
+		XMVECTOR vFrom = XMLoadFloat3(&LastUpVector);
+		XMVECTOR vTo = XMVector3Normalize(XMLoadFloat3(&Normal));
+
+		float factor = 0.1f; // 예: 매 프레임 10%씩 보간
+
+		XMVECTOR vNewUp = XMVector3Normalize(XMVectorLerp(vFrom, vTo, factor));
+		XMStoreFloat3(&LastUpVector, vNewUp);
+
+		XMStoreFloat3(&LastUpVector, vNewUp);
+
+		XMFLOAT3 xmf3Up = LastUpVector;
 		XMFLOAT3 xmf3Look = GetLook();
-		XMFLOAT3 xmf3Right = GetRight();
-
-		// 3. Right 벡터를 (Look x Up)으로 재계산, 모두 정규화
-		xmf3Right = Vector3::Normalize(Vector3::CrossProduct(xmf3Look, xmf3Up, true));
+		XMFLOAT3 xmf3Right = Vector3::Normalize(Vector3::CrossProduct(xmf3Look, xmf3Up, true));
 		xmf3Look = Vector3::Normalize(Vector3::CrossProduct(xmf3Up, xmf3Right, true));
 
-		// 4. 월드 행렬에 반영
 		m_xmf4x4World._11 = xmf3Right.x;  m_xmf4x4World._12 = xmf3Right.y;  m_xmf4x4World._13 = xmf3Right.z;
 		m_xmf4x4World._21 = xmf3Up.x;     m_xmf4x4World._22 = xmf3Up.y;     m_xmf4x4World._23 = xmf3Up.z;
 		m_xmf4x4World._31 = xmf3Look.x;   m_xmf4x4World._32 = xmf3Look.y;   m_xmf4x4World._33 = xmf3Look.z;
@@ -305,6 +311,7 @@ void CGameObject::Fall(float G, XMFLOAT3 Normal)
 
 	SetPosition(xmf3Position);
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CCubeObject::Animate(float fElapsedTime)
 {
