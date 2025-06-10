@@ -85,7 +85,10 @@ void CMesh::LoadMeshFromFile(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	std::ifstream file(filename);
 	if (!file.is_open()) return;
 
-	std::vector<XMFLOAT3> vertices;
+	std::vector<XMFLOAT3> positions;
+	std::vector<XMFLOAT3> normals;
+	struct Vertex { XMFLOAT3 pos; XMFLOAT3 normal; };
+	std::vector<Vertex> vertices;
 	std::vector<UINT> indices;
 
 	std::string line;
@@ -97,17 +100,33 @@ void CMesh::LoadMeshFromFile(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 		if (prefix == "v") {
 			float x, y, z;
 			iss >> x >> y >> z;
-			vertices.emplace_back(x, y, z);
+			positions.emplace_back(x, y, z);
+		}
+		else if (prefix == "vn") {
+			float x, y, z;
+			iss >> x >> y >> z;
+			normals.emplace_back(x, y, z);
 		}
 		else if (prefix == "f") {
 			for (int i = 0; i < 3; ++i) {
 				std::string token;
 				iss >> token;
 				std::istringstream tokenStream(token);
-				std::string vIdx;
+				std::string vIdx, vtIdx, vnIdx;
 				std::getline(tokenStream, vIdx, '/');
-				int idx = std::stoi(vIdx) - 1;
-				indices.push_back(static_cast<UINT>(idx));
+				std::getline(tokenStream, vtIdx, '/');
+				std::getline(tokenStream, vnIdx, '/');
+
+				int v = std::stoi(vIdx) - 1;
+				int vn = vnIdx.empty() ? -1 : (std::stoi(vnIdx) - 1);
+
+				Vertex vert;
+				vert.pos = positions[v];
+				vert.normal = (vn >= 0) ? normals[vn] : XMFLOAT3(0, 1, 0); // 기본 normal
+
+				// 중복 제거 없이 매 face마다 새로 추가
+				vertices.push_back(vert);
+				indices.push_back(static_cast<UINT>(vertices.size() - 1));
 			}
 		}
 	}
@@ -116,26 +135,39 @@ void CMesh::LoadMeshFromFile(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	m_nVertices = static_cast<UINT>(vertices.size());
 	m_nIndices = static_cast<UINT>(indices.size());
 
-	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
-	memcpy(m_pxmf3Positions, vertices.data(), sizeof(XMFLOAT3) * m_nVertices);
+	// 정점 데이터 저장 (위치 + 노멀)
+	struct VertexBufferData { XMFLOAT3 pos; XMFLOAT3 normal; };
+	VertexBufferData* vbData = new VertexBufferData[m_nVertices];
+	for (UINT i = 0; i < m_nVertices; ++i) {
+		vbData[i].pos = vertices[i].pos;
+		vbData[i].normal = vertices[i].normal;
+	}
 
+	// 기존 m_pxmf3Positions만 유지 필요 시 (아래와 같이 위치만 복사)
+	if (m_pxmf3Positions) delete[] m_pxmf3Positions;
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+	for (UINT i = 0; i < m_nVertices; ++i) m_pxmf3Positions[i] = vertices[i].pos;
+
+	if (m_pxmf3Normals) delete[] m_pxmf3Normals;
+	m_pxmf3Normals = new XMFLOAT3[m_nVertices];
+	for (UINT i = 0; i < m_nVertices; ++i) m_pxmf3Normals[i] = vertices[i].normal;
+
+	if (m_pnIndices) delete[] m_pnIndices;
 	m_pnIndices = new UINT[m_nIndices];
 	memcpy(m_pnIndices, indices.data(), sizeof(UINT) * m_nIndices);
 
 	// ===== GPU 리소스 생성 =====
-
-	// 1. 정점 버퍼
-	UINT vbSize = sizeof(XMFLOAT3) * m_nVertices;
-	m_pd3dPositionBuffer = CreateBufferResource(device, cmdList, m_pxmf3Positions, vbSize,
+	UINT vbSize = sizeof(VertexBufferData) * m_nVertices;
+	m_pd3dPositionBuffer = CreateBufferResource(device, cmdList, vbData, vbSize,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
 
 	m_nVertexBufferViews = 1;
 	m_pd3dVertexBufferViews = new D3D12_VERTEX_BUFFER_VIEW[1];
 	m_pd3dVertexBufferViews[0].BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
-	m_pd3dVertexBufferViews[0].StrideInBytes = sizeof(XMFLOAT3);
+	m_pd3dVertexBufferViews[0].StrideInBytes = sizeof(VertexBufferData);
 	m_pd3dVertexBufferViews[0].SizeInBytes = vbSize;
 
-	// 2. 인덱스 버퍼
+	// 인덱스 버퍼
 	UINT ibSize = sizeof(UINT) * m_nIndices;
 	m_pd3dIndexBuffer = CreateBufferResource(device, cmdList, m_pnIndices, ibSize,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER, &m_pd3dIndexUploadBuffer);
@@ -144,9 +176,9 @@ void CMesh::LoadMeshFromFile(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_d3dIndexBufferView.SizeInBytes = ibSize;
 
-	// OBB 계산
-	XMFLOAT3 min = vertices[0], max = vertices[0];
-	for (const auto& v : vertices) {
+	// OBB 계산은 위치 정보만 사용 (원본 유지)
+	XMFLOAT3 min = positions[0], max = positions[0];
+	for (const auto& v : positions) {
 		if (v.x < min.x) min.x = v.x;
 		if (v.y < min.y) min.y = v.y;
 		if (v.z < min.z) min.z = v.z;
@@ -168,7 +200,10 @@ void CMesh::LoadMeshFromFile(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	};
 
 	m_xmOOBB = BoundingOrientedBox(center, extent, XMFLOAT4(0, 0, 0, 1));
+
+	delete[] vbData;
 }
+
 
 void CMesh::SetPolygon(int nIndex, CPolygon* pPolygon)
 {

@@ -153,7 +153,6 @@ float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
     // гу╩Й
     float3 finalColor = ambient + diffuse + specular;
 	
-    //return float4(N, 1.0f);
     return float4(finalColor, 1.0f);
 
 }
