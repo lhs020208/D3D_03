@@ -21,8 +21,13 @@ cbuffer cbCameraInfo : register(b2)
 
 cbuffer cbLightInfo : register(b3)
 {
-    float3 gf3LightDirection;
-    float3 gf3LightColor;
+    float gfLightDirectionX;
+    float gfLightDirectionY;
+    float gfLightDirectionZ;
+	
+    float gf3LightColorX;
+    float gf3LightColorY;
+    float gf3LightColorZ;
 }
 
 struct VS_INPUT
@@ -57,7 +62,7 @@ VS_OUTPUT VSPseudoLighting(VS_INPUT input)
 static float3 gf3AmbientLightColor = float3(1.0f, 1.0f, 1.0f);
 static float3 gf3AmbientSpecularColor = float3(1.0f, 1.0f, 1.0f);
 
-static float3 gf3SpecularColor = float3(1.0f, 1.0f, 1.0f);
+static float3 gf3SpecularColor = float3(0.2f, 0.2f, 0.2f);
 
 static float gfSpecular = 2.0f;
 static float gfGlossiness = 0.8f;
@@ -115,11 +120,14 @@ inline float NDFBlinnPhongNormalizedTerm(float NdotH, float fRoughnessToSpecPowe
 
 float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
 {
+    float3 gfLightDirection = float3(gfLightDirectionX, gfLightDirectionY, gfLightDirectionZ);
+    float3 gf3LightColor = float3(gf3LightColorX, gf3LightColorY, gf3LightColorZ);
+	
 	// Normalize normal
     float3 N = normalize(input.normalW);
 
     // 조명 방향(단위벡터, -붙이면 '빛이 오는 방향')
-    float3 L = normalize(-gf3LightDirection);
+    float3 L = normalize(-gfLightDirection);
 
     // 카메라 방향
     float3 V = normalize(gf3CameraPosition - input.positionW);
@@ -139,13 +147,13 @@ float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
     float3 diffuse = gf3LightColor * gf3ObjectColor * NdotL;
 
     // 스페큘러 항
-    float shininess = 64.0f; // 하이라이트 강도 (임의 값, 조정 가능)
+    float shininess = 4.0f; // 하이라이트 강도 (임의 값, 조정 가능)
     float3 specular = gf3SpecularColor * pow(NdotH, shininess);
 	
     // 합산
     float3 finalColor = ambient + diffuse + specular;
 	
+    //return float4(N, 1.0f);
     return float4(finalColor, 1.0f);
 
-    //return float4(gf3ObjectColor, 1.0f);
 }

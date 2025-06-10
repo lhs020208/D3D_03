@@ -45,8 +45,8 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 	pd3dRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	pd3dRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-	pd3dRootParameters[3].Constants.Num32BitValues = 6; // float 6개
-	pd3dRootParameters[3].Constants.ShaderRegister = 3; // b3 (즉, register(b3)와 일치)
+	pd3dRootParameters[3].Constants.Num32BitValues = 6; // float 6개 + 패딩 2개
+	pd3dRootParameters[3].Constants.ShaderRegister = 3; // b3 
 	pd3dRootParameters[3].Constants.RegisterSpace = 0;
 	pd3dRootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
@@ -171,12 +171,12 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_pYWObjects->UpdateBoundingBox();
 
 	XMFLOAT3 xmf3Scale(1.0f, 0.2f, 1.0f);
-	XMFLOAT4 xmf4Color(1.0f, 1.0f, 1.0f, 0.0f);
+	XMFLOAT4 xmf4Color(0.2f, 0.2f, 0.2f, 0.0f);
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
 		m_pd3dGraphicsRootSignature, _T("Models/HeightMap.raw"), 257, 257, 257,
 		257, xmf3Scale, xmf4Color);
 	m_pTerrain->SetPosition(-128.0f, -20.0f, -128.0f);
-	m_pTerrain->SetColor(XMFLOAT3(1.0f, 1.0f, 1.0f));
+	m_pTerrain->SetColor(XMFLOAT3(0.2f, 0.2f, 0.2f));
 	m_pTerrain->SetShader(pShader);
 	m_pTerrain->UpdateBoundingBox();
 }
@@ -206,10 +206,14 @@ void CTankScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 	float light[6] = {
-    m_xmf3LightDirection.x, m_xmf3LightDirection.y, m_xmf3LightDirection.z,
-    m_xmf3LightColor.x, m_xmf3LightColor.y, m_xmf3LightColor.z
-};
-pd3dCommandList->SetGraphicsRoot32BitConstants(3, 6, light, 0);
+		m_xmf3LightDirection.x, 
+		m_xmf3LightDirection.y, 
+		m_xmf3LightDirection.z, 
+		m_xmf3LightColor.x, 
+		m_xmf3LightColor.y,
+		m_xmf3LightColor.z, 
+	};
+	pd3dCommandList->SetGraphicsRoot32BitConstants(3, 6, light, 0);
 
 	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 	if (m_pPlayer) m_pPlayer->Render(pd3dCommandList, pCamera);
