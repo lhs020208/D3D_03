@@ -445,8 +445,8 @@ void CTankPlayer::Fall(float G, XMFLOAT3 Normal)
 		XMFLOAT3 xmf3Right = m_xmf3Right;
 
 		// 3. Right, Look 재계산
-		xmf3Right = Vector3::Normalize(Vector3::CrossProduct(xmf3Look, xmf3Up, true));
-		xmf3Look = Vector3::Normalize(Vector3::CrossProduct(xmf3Up, xmf3Right, true));
+		xmf3Right = Vector3::Normalize(Vector3::CrossProduct(xmf3Up, xmf3Look, true));
+		xmf3Up = Vector3::Normalize(Vector3::CrossProduct(xmf3Look, xmf3Right, true));
 
 		// 4. 실제 Player 멤버 벡터에 반영
 		m_xmf3Up = xmf3Up;

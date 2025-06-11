@@ -292,11 +292,9 @@ void CGameObject::Fall(float G, XMFLOAT3 Normal)
 		XMVECTOR vFrom = XMLoadFloat3(&LastUpVector);
 		XMVECTOR vTo = XMVector3Normalize(XMLoadFloat3(&Normal));
 
-		float factor = 0.1f; // 예: 매 프레임 10%씩 보간
+		float factor = 0.1f;
 
 		XMVECTOR vNewUp = XMVector3Normalize(XMVectorLerp(vFrom, vTo, factor));
-		XMStoreFloat3(&LastUpVector, vNewUp);
-
 		XMStoreFloat3(&LastUpVector, vNewUp);
 
 		XMFLOAT3 xmf3Up = LastUpVector;
@@ -304,9 +302,11 @@ void CGameObject::Fall(float G, XMFLOAT3 Normal)
 		XMFLOAT3 xmf3Right = Vector3::Normalize(Vector3::CrossProduct(xmf3Look, xmf3Up, true));
 		xmf3Look = Vector3::Normalize(Vector3::CrossProduct(xmf3Up, xmf3Right, true));
 
+		/*
 		m_xmf4x4World._11 = xmf3Right.x;  m_xmf4x4World._12 = xmf3Right.y;  m_xmf4x4World._13 = xmf3Right.z;
 		m_xmf4x4World._21 = xmf3Up.x;     m_xmf4x4World._22 = xmf3Up.y;     m_xmf4x4World._23 = xmf3Up.z;
 		m_xmf4x4World._31 = xmf3Look.x;   m_xmf4x4World._32 = xmf3Look.y;   m_xmf4x4World._33 = xmf3Look.z;
+		*/
 	}
 
 	SetPosition(xmf3Position);
