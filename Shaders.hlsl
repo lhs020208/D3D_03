@@ -145,6 +145,11 @@ float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
 
     // 디퓨즈 항
     float3 diffuse = gf3LightColor * gf3ObjectColor * NdotL;
+    float ymin = -5.0f; // 바닥 높이
+    float ymax = 5.0f; // 최대 높이
+
+    float yFactor = saturate((input.positionW.y - ymin) / (ymax - ymin));
+    diffuse *= lerp(0.2, 2.0, yFactor);
 
     // 스페큘러 항
     float shininess = 4.0f; // 하이라이트 강도 (임의 값, 조정 가능)
