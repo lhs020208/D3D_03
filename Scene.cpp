@@ -113,7 +113,7 @@ CTankScene::CTankScene(CPlayer* pPlayer) : CScene(pPlayer) {}
 void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
-	CPseudoLightingShader* pShader = new CPseudoLightingShader();
+	CPLightingShader* pShader = new CPLightingShader();
 	pShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 

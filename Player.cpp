@@ -235,7 +235,7 @@ CCubePlayer::CCubePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	CPseudoLightingShader *pShader = new CPseudoLightingShader();
+	CPLightingShader*pShader = new CPLightingShader();
 	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -284,7 +284,7 @@ CTankPlayer::CTankPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	CPseudoLightingShader* pShader = new CPseudoLightingShader();
+	CPLightingShader* pShader = new CPLightingShader();
 	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 

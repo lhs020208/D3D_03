@@ -46,7 +46,7 @@ struct VS_OUTPUT
 	float2		uv : TEXTURECOORD;
 };
 
-VS_OUTPUT VSPseudoLighting(VS_INPUT input)
+VS_OUTPUT VSPLighting(VS_INPUT input)
 {
 	VS_OUTPUT output;
 
@@ -118,7 +118,7 @@ inline float NDFBlinnPhongNormalizedTerm(float NdotH, float fRoughnessToSpecPowe
 	return(fNormTerm * fSpecTerm);
 }
 
-float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
+float4 PSPLighting(VS_OUTPUT input) : SV_TARGET
 {
     float3 gfLightDirection = float3(gfLightDirectionX, gfLightDirectionY, gfLightDirectionZ);
     float3 gf3LightColor = float3(gf3LightColorX, gf3LightColorY, gf3LightColorZ);
@@ -145,8 +145,8 @@ float4 PSPseudoLighting(VS_OUTPUT input) : SV_TARGET
 
     // 디퓨즈 항
     float3 diffuse = gf3LightColor * gf3ObjectColor * NdotL;
-    float ymin = -5.0f; // 바닥 높이
-    float ymax = 5.0f; // 최대 높이
+    float ymin = -20.0f; // 바닥 높이
+    float ymax = 31.0f; // 최대 높이
 
     float yFactor = saturate((input.positionW.y - ymin) / (ymax - ymin));
     diffuse *= lerp(0.2, 2.0, yFactor);

@@ -50,11 +50,11 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-class CPseudoLightingShader : public CShader
+class CPLightingShader : public CShader
 {
 public:
-	CPseudoLightingShader();
-	virtual ~CPseudoLightingShader();
+	CPLightingShader();
+	virtual ~CPLightingShader();
 
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 
