@@ -46,7 +46,7 @@ struct VS_OUTPUT
 	float2		uv : TEXTURECOORD;
 };
 
-VS_OUTPUT VSPLighting(VS_INPUT input)
+VS_OUTPUT VSLighting(VS_INPUT input)
 {
 	VS_OUTPUT output;
 
@@ -118,7 +118,46 @@ inline float NDFBlinnPhongNormalizedTerm(float NdotH, float fRoughnessToSpecPowe
 	return(fNormTerm * fSpecTerm);
 }
 
-float4 PSPLighting(VS_OUTPUT input) : SV_TARGET
+float4 PSLighting(VS_OUTPUT input) : SV_TARGET
+{
+    float3 gfLightDirection = float3(gfLightDirectionX, gfLightDirectionY, gfLightDirectionZ);
+    float3 gf3LightColor = float3(gf3LightColorX, gf3LightColorY, gf3LightColorZ);
+	
+	// Normalize normal
+    float3 N = normalize(input.normalW);
+
+    // 조명 방향(단위벡터, -붙이면 '빛이 오는 방향')
+    float3 L = normalize(-gfLightDirection);
+
+    // 카메라 방향
+    float3 V = normalize(gf3CameraPosition - input.positionW);
+
+    // Half vector (Blinn-Phong)
+    float3 H = normalize(L + V);
+
+    // 내적 계산
+    float NdotL = saturate(dot(N, L));
+    float NdotV = saturate(dot(N, V));
+    float NdotH = saturate(dot(N, H));
+
+    // 앰비언트 항
+    float3 ambient = gf3AmbientLightColor * gf3ObjectColor;
+
+    // 디퓨즈 항
+    float3 diffuse = gf3LightColor * gf3ObjectColor * NdotL;
+
+    // 스페큘러 항
+    float shininess = 4.0f; // 하이라이트 강도 (임의 값, 조정 가능)
+    float3 specular = gf3SpecularColor * pow(NdotH, shininess);
+	
+    // 합산
+    float3 finalColor = ambient + diffuse + specular;
+	
+    return float4(finalColor, 1.0f);
+
+}
+
+float4 PSTerrainLighting(VS_OUTPUT input) : SV_TARGET
 {
     float3 gfLightDirection = float3(gfLightDirectionX, gfLightDirectionY, gfLightDirectionZ);
     float3 gf3LightColor = float3(gf3LightColorX, gf3LightColorY, gf3LightColorZ);

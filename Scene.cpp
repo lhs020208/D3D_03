@@ -113,9 +113,14 @@ CTankScene::CTankScene(CPlayer* pPlayer) : CScene(pPlayer) {}
 void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
-	CPLightingShader* pShader = new CPLightingShader();
+	CLightingShader* pShader = new CLightingShader();
 	pShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+
+	CTerrainLightingShader* pTerrainShader = new CTerrainLightingShader();
+	pTerrainShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	pTerrainShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	using namespace std;
 	default_random_engine dre{ random_device{}() };
@@ -177,7 +182,7 @@ void CTankScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		257, xmf3Scale, xmf4Color);
 	m_pTerrain->SetPosition(-128.0f, -20.0f, -128.0f);
 	m_pTerrain->SetColor(XMFLOAT3(0.2f, 0.2f, 0.2f));
-	m_pTerrain->SetShader(pShader);
+	m_pTerrain->SetShader(pTerrainShader);
 	m_pTerrain->UpdateBoundingBox();
 }
 
