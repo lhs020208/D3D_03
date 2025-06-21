@@ -440,6 +440,22 @@ void CTankScene::CheckExpByTerrain()
 	}
 }
 
+void CTankScene::CheckBulletByTerrain()
+{
+	CTankPlayer* pTankPlayer = dynamic_cast<CTankPlayer*>(m_pPlayer);
+	if (pTankPlayer && pTankPlayer->shot) {
+		XMFLOAT3 xmf3Position;
+		xmf3Position = pTankPlayer->m_pBullet->GetPosition();
+
+		float fHeight = m_pTerrain->GetHeight(xmf3Position);
+		if (xmf3Position.y + 1.0f < fHeight) {
+			pTankPlayer->shot = false;
+			pTankPlayer->bullet_timer = 0;
+			pTankPlayer->ToggleObject = NULL;
+		}
+	}
+}
+
 void CTankScene::Animate(float fElapsedTime)
 {
 	for (int i = 0; i < m_nTanks; i++) {
@@ -471,4 +487,5 @@ void CTankScene::Animate(float fElapsedTime)
 	CheckTankByBulletCollisions();
 	CheckPlayerByBulletCollisions();
 	CheckExpByTerrain();
+	CheckBulletByTerrain();
 }

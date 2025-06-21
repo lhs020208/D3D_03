@@ -56,6 +56,7 @@ public:
 	void CTankScene::CheckTankByBulletCollisions();
 	void CTankScene::CheckPlayerByBulletCollisions();
 	void CTankScene::CheckExpByTerrain();
+	void CTankScene::CheckBulletByTerrain();
 
 private:
 	XMFLOAT3 m_xmf3LightDirection = XMFLOAT3(0.0f, -1.0f, 0.0f);
