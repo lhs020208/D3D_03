@@ -441,7 +441,7 @@ void CTankPlayer::Fall(float G, XMFLOAT3 Normal)
 		XMFLOAT3 xmf3Up = LastUpVector;
 
 		// 2. 기존 Look, Right 벡터 가져오기
-		XMFLOAT3 xmf3Look = m_xmf3Look;   // 멤버벡터 사용!
+		XMFLOAT3 xmf3Look = m_xmf3Look;
 		XMFLOAT3 xmf3Right = m_xmf3Right;
 
 		// 3. Right, Look 재계산

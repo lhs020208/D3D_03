@@ -476,11 +476,11 @@ void CTankScene::Animate(float fElapsedTime)
 	}
 
 	CTankPlayer* pTankPlayer = dynamic_cast<CTankPlayer*>(m_pPlayer);
-	
-	pTankPlayer->Animate(fElapsedTime);
+
 	XMFLOAT3 xmf3Position = pTankPlayer->GetPosition();
 	pTankPlayer->Height = m_pTerrain->GetHeight(xmf3Position);
 	pTankPlayer->Fall(G, m_pTerrain->GetNormal(xmf3Position));
+	pTankPlayer->Animate(fElapsedTime);
 
 	if (m_pYWObjects && GameSet >= 10) m_pYWObjects->Animate(fElapsedTime);
 
